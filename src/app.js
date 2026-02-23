@@ -13,6 +13,8 @@ app.use("/api/users", userRoutes);
 const adminRoutes = require("./routes/admin.routes");
 app.use("/api/admin", adminRoutes);
 module.exports = app;
+const servicesRoutes = require("./modules/services/services.routes");
+app.use("/api/services", servicesRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
