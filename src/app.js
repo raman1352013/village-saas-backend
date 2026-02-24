@@ -16,7 +16,21 @@ module.exports = app;
 const servicesRoutes = require("./modules/services/services.routes");
 app.use("/api/services", servicesRoutes);
 
+const AppError = require("./utils/AppError");
+
+// Global error handling middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ message: "Something went wrong" });
+  console.error(err);
+
+  if (process.env.NODE_ENV === 'production' && !err.isOperational) {
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong!"
+    });
+  }
+
+  res.status(err.statusCode || 500).json({
+    success: false,
+    message: err.message || "Internal Server Error"
+  });
 });

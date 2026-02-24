@@ -1,5 +1,5 @@
 const servicesService = require("./services.service");
-
+const AppError = require("../../utils/AppError");
 exports.createService = async (req, res) => {
   try {
     if (req.user.role !== "admin") {
@@ -68,12 +68,15 @@ exports.applyService = async (req, res) => {
       serviceId
     );
 
-    res.status(201).json({
-      success: true,
-      data: application
-    });
+    // res.status(201).json({
+    //   success: true,
+    //   data: application
+    // });
+        return successResponse(res, 201, "Application submitted", application);
+
 
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    
+throw new AppError("Service expired", 400);
   }
 };

@@ -33,32 +33,62 @@ exports.getAllServices = async () => {
   return result.rows;
 };
 
+
+
 exports.applyToService = async (userId, serviceId) => {
+  const client = await pool.connect();
 
-  // Check max applicants
-  const countResult = await pool.query(
-    "SELECT COUNT(*) FROM applications WHERE service_id = $1",
-    [serviceId]
-  );
+  try {
+    await client.query("BEGIN");
 
-  const serviceResult = await pool.query(
-    "SELECT max_applicants FROM services WHERE id = $1",
-    [serviceId]
-  );
+    // 1️⃣ Check service exists
+    const serviceResult = await client.query(
+      "SELECT * FROM services WHERE id = $1",
+      [serviceId]
+    );
 
-  const currentCount = parseInt(countResult.rows[0].count);
-  const maxApplicants = serviceResult.rows[0].max_applicants;
+    if (serviceResult.rows.length === 0) {
+      throw new Error("Service not found");
+    }
 
-  if (maxApplicants && currentCount >= maxApplicants) {
-    throw new Error("Maximum applicants reached");
+    const service = serviceResult.rows[0];
+
+    // 2️⃣ Check expiry
+    if (service.last_date && service.last_date < new Date()) {
+      throw new Error("Service expired");
+    }
+
+    // 3️⃣ Check max applicants
+    const countResult = await client.query(
+      "SELECT COUNT(*) FROM applications WHERE service_id = $1",
+      [serviceId]
+    );
+
+    const currentCount = parseInt(countResult.rows[0].count);
+
+    if (
+      service.max_applicants &&
+      currentCount >= service.max_applicants
+    ) {
+      throw new Error("Maximum applicants reached");
+    }
+
+    // 4️⃣ Insert application
+    const insertResult = await client.query(
+      `INSERT INTO applications (user_id, service_id)
+       VALUES ($1, $2)
+       RETURNING *`,
+      [userId, serviceId]
+    );
+
+    await client.query("COMMIT");
+
+    return insertResult.rows[0];
+
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
   }
-
-  const result = await pool.query(
-    `INSERT INTO applications (user_id, service_id)
-     VALUES ($1, $2)
-     RETURNING *`,
-    [userId, serviceId]
-  );
-
-  return result.rows[0];
 };
