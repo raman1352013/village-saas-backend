@@ -92,3 +92,27 @@ exports.applyToService = async (userId, serviceId) => {
     client.release();
   }
 };
+
+exports.getUserApplications = async (userId) => {
+  const result = await pool.query(
+    `
+    SELECT 
+      a.id AS application_id,
+      a.status,
+      a.applied_at,
+      s.title,
+      s.description,
+      s.location,
+      s.last_date,
+      o.name AS organization_name
+    FROM applications a
+    JOIN services s ON a.service_id = s.id
+    LEFT JOIN organizations o ON s.organization_id = o.id
+    WHERE a.user_id = $1
+    ORDER BY a.applied_at DESC
+    `,
+    [userId]
+  );
+
+  return result.rows;
+};

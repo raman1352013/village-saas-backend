@@ -1,5 +1,7 @@
 const servicesService = require("./services.service");
 const AppError = require("../../utils/AppError");
+const { successResponse } = require("../../utils/response");
+
 exports.createService = async (req, res) => {
   try {
     if (req.user.role !== "admin") {
@@ -78,5 +80,23 @@ exports.applyService = async (req, res) => {
   } catch (error) {
     
 throw new AppError("Service expired", 400);
+  }
+};
+
+exports.getUserApplications = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+
+    const applications = await servicesService.getUserApplications(userId);
+
+    return successResponse(
+      res,
+      200,
+      "User applications fetched successfully",
+      applications
+    );
+
+  } catch (error) {
+    next(error);
   }
 };
