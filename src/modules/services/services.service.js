@@ -32,6 +32,7 @@ exports.getAllServices = async () => {
 
   return result.rows;
 };
+
 exports.applyToService = async (userId, serviceId) => {
 
   // Check max applicants

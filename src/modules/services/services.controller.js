@@ -33,11 +33,25 @@ exports.createService = async (req, res) => {
   }
 };
 
+// exports.getServices = async (req, res) => {
+//   try {
+//     const services = await servicesService.getAllServices();
+//     res.json({
+//       success: true,
+//       data: services
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ message: "Server error" });
+//   }
+// };
 exports.getServices = async (req, res) => {
   try {
-    const services = await servicesService.getAllServices();
+    const services = await servicesService.getAllServices(req.query);
+
     res.json({
       success: true,
+      page: req.query.page || 1,
       data: services
     });
   } catch (error) {
